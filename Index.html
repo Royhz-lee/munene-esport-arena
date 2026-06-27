@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Munene Esports Arena - eFootball Tournament Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS VARIABLES & THEME SETUP --- */
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #121824;
+            --bg-card: #1a2232;
+            --accent-blue: #00d2ff;
+            --accent-gold: #ffb703;
+            --text-main: #ffffff;
+            --text-muted: #8fa0b7;
+            --success: #00e676;
+            --danger: #ff1744;
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            font-size: 18px;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        button, input, select, textarea {
+            font-family: var(--font-body);
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+        }
+
+        /* --- REUSABLE UTILITIES --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 24px;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+        }
+
+        .btn-blue {
+            background: linear-gradient(90deg, #005c97, var(--accent-blue));
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+        }
+
+        .btn-blue:hover {
+            box-shadow: 0 0 25px rgba(0, 210, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-gold {
+            background: linear-gradient(90deg, #e65c00, var(--accent-gold));
+            color: #0a0e17;
+            text-shadow: 0 0 2px rgba(255,255,255,0.5);
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.3);
+        }
+
+        .btn-gold:hover {
+            box-shadow: 0 0 25px rgba(255, 183, 3, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--accent-blue);
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        .accent-text-gold { color: var(--accent-gold); }
+        .accent-text-blue { color: var(--accent-blue); }
+
+        /* --- ARCHITECTURE GRID (SPA View Switcher) --- */
+        .page-view {
+            display: none;
+            min-height: calc(100vh - 80px);
+        }
+
+        .page-view.active-view {
+            display: block;
+        }
+
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        /* --- HEADER NAVIGATION --- */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid rgba(0, 210, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 24px;
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, var(--text-main), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            font-family: var(--font-display);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent-blue);
+            text-shadow: 0 0 8px var(--accent-blue);
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* --- SIDEBAR COMPONENTS --- */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-brand {
+            font-family: var(--font-display);
+            font-size: 16px;
+            color: var(--accent-gold);
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background: rgba(0, 210, 255, 0.1);
+            color: var(--accent-blue);
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .dashboard-content {
+            padding: 40px;
+            background: var(--bg-primary);
+            overflow-y: auto;
+        }
+
+        /* --- HOME HERO SECTION --- */
+        #hero-section {
+            background: linear-gradient(135deg, rgba(10,14,23,0.95), rgba(18,24,36,0.85)), url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1920') no-repeat center center/cover;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            position: relative;
+            animation: pulseBackground 10s infinite alternate;
+        }
+
+        @keyframes pulseBackground {
+            0% { background-position: center; }
+            100% { background-position: top; }
+        }
+
+        #hero-section h1 {
+            font-family: var(--font-display);
+            font-size: 56px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(0,0,0,0.7);
+        }
+
+        #hero-section p {
+            font-size: 22px;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin-bottom: 40px;
+        }
+
+        /* --- STATS SECTION --- */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 40px 5%;
+            background: var(--bg-secondary);
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 25px;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .stat-card h3 {
+            font-family: var(--font-display);
+            font-size: 36px;
+            color: var(--accent-blue);
+        }
+
+        .stat-card p {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* --- CARDS & GRID COMPONENTS --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 40px 5%;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-blue);
+            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.1);
+        }
+
+        .card-header-img {
+            height: 180px;
+            background: linear-gradient(45deg, #121824, #1a2232);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-tag {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--accent-gold);
+            color: #000;
+            padding: 3px 10px;
+            font-family: var(--font-display);
+            font-weight: bold;
+            font-size: 11px;
+            border-radius: 3px;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 10px;
+        }
+
+        /* --- DASHBOARD METRIC CARDS --- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-card.gold-card {
+            border-left-color: var(--accent-gold);
+        }
+
+        .metric-info h4 {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .metric-info p {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .metric-icon {
+            font-size: 32px;
+            opacity: 0.3;
+        }
+
+        /* --- TABLES --- */
+        .table-responsive {
+            overflow-x: auto;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        th {
+            font-family: var(--font-display);
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.2);
+        }
+
+        tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-success { background: rgba(0, 230, 118, 0.15); color: var(--success); }
+        .status-pending { background: rgba(255, 183, 3, 0.15); color: var(--accent-gold); }
+        .status-danger { background: rgba(255, 23, 68, 0.15); color: var(--danger); }
+
+        /* --- LEADERBOARD TOP 3 --- */
+        .top-podium {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+            margin: 40px auto;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .podium-place {
+            background: var(--bg-secondary);
+            border: 2px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .podium-1 { height: 240px; border-color: var(--accent-gold); }
+        .podium-2 { height: 200px; border-color: #c0c0c0; }
+        .podium-3 { height: 180px; border-color: #cd7f32; }
+
+        .podium-crown {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        /* --- FORMS & INTERACTION --- */
+        .form-container {
+            max-width: 500px;
+            margin: 60px auto;
+            background: var(--bg-secondary);
+            padding: 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 210, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 25px;
+            color: var(--text-muted);
+        }
+
+        /* --- STAGE TIMELINE GRAPHIC --- */
+        .stages-timeline {
+            display: flex;
+            justify-content: space-between;
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 6px;
+            margin: 30px 0;
+            overflow-x: auto;
+            gap: 15px;
+        }
+
+        .stage-node {
+            text-align: center;
+            min-width: 100px;
+            position: relative;
+        }
+
+        .stage-node .dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--text-muted);
+            margin: 0 auto 8px;
+        }
+
+        .stage-node.active-stage .dot {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        .stage-node p {
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* --- SPONSORS BRAND BLOCK --- */
+        .sponsors-strip {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 40px 5%;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .sponsor-logo {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: bold;
+            opacity: 0.4;
+            transition: var(--transition);
+        }
+
+        .sponsor-logo:hover {
+            opacity: 1;
+            color: var(--accent-blue);
+        }
+
+        /* --- INFO BOXES --- */
+        .payment-alert-box {
+            background: rgba(255, 183, 3, 0.1);
+            border: 1px solid var(--accent-gold);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: #06090f;
+            padding: 60px 5% 20px;
+            border-top: 2px solid rgba(255,255,255,0.05);
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-col h4 {
+            font-family: var(--font-display);
+            color: var(--text-main);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-size: 16px;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 14px;
+        }
+
+        /* --- RESPONSIVE MEDIA QUERIES --- */
+        @media (max-width: 992px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+            .menu-toggle {
+                display: block;
+            }
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 78px;
+                left: 0;
+                width: 100%;
+                background: var(--bg-secondary);
+                padding: 20px;
+                border-bottom: 2px solid var(--accent-blue);
+            }
+            .nav-links.mobile-open {
+                display: flex;
+            }
+            #hero-section h1 {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header id="main-header">
+        <div class="logo" onclick="switchView('home')">
+            <i class="fa-solid fa-gamepad accent-text-blue"></i> MUNENE ESPORTS
+        </div>
+        <div class="menu-toggle" onclick="toggleMobileMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+        <ul class="nav-links" id="nav-menu">
+            <li><a onclick="switchView('home')" class="active">Home</a></li>
+            <li><a onclick="switchView('tournaments-view')">Tournaments</a></li>
+            <li><a onclick="switchView('leagues-view')">Leagues</a></li>
+            <li><a onclick="switchView('leaderboard-view')">Leaderboard</a></li>
+            <li><a onclick="switchView('home', 'sponsors-section')">Sponsors</a></li>
+            <li><a onclick="switchView('home', 'about-section')">About</a></li>
+            <li><a onclick="switchView('login-view')">Login</a></li>
+            <li><a onclick="switchView('register-view')" class="accent-text-gold">Register</a></li>
+            <li><a onclick="switchView('player-dashboard-view')" style="border: 1px solid var(--accent-blue); padding: 5px 10px; border-radius: 4px;"><i class="fa-solid fa-user"></i> Demo Dash</a></li>
+        </ul>
+    </header>
+
+    <div id="home" class="page-view active-view">
+        <section id="hero-section">
+            <h1>Dominate the eFootball Arena</h1>
+            <p>Compete in professional leagues, secure real prize earnings, and rank up against top continental champions.</p>
+            <div>
+                <button class="btn btn-blue" onclick="switchView('register-view')">Join Arena Now <i class="fa-solid fa-rocket"></i></button>
+                <button class="btn btn-gold" onclick="switchView('tournaments-view')">View Tournaments</button>
+            </div>
+        </section>
+
+        <section class="stats-container">
+            <div class="stat-card">
+                <h3>Ksh 1.2M+</h3>
+                <p>Total Winnings Paid</p>
+            </div>
+            <div class="stat-card">
+                <h3>14,200+</h3>
+                <p>Active Gamers</p>
+            </div>
+            <div class="stat-card">
+                <h3>480+</h3>
+                <p>Tournaments Hosted</p>
+            </div>
+            <div class="stat-card">
+                <h3>99.8%</h3>
+                <p>Instant Payout Rate</p>
+            </div>
+        </section>
+
+        <section style="padding: 60px 0;">
+            <h2 class="section-title">Featured Tournaments</h2>
+            <div class="grid-container" id="featured-tournaments-container"></div>
+        </section>
+
+        <section style="background: var(--bg-secondary); padding: 60px 0;">
+            <h2 class="section-title">Arena Tiers & Leagues</h2>
+            <div class="grid-container">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title accent-text-gold">Champions League</h3>
+                        <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 15px;">The peak tier for professional masters. High stakes, maximum glory.</p>
+                        <button class="btn btn-blue" onclick="switchView('leagues-view')">Explore Tier</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title accent-text-blue">Gold & Platinum</h3>
+                        <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 15px;">Elite competitive tiers bridging raw talent and professional standard play.</p>
+                        <button class="btn btn-blue" onclick="switchView('leagues-view')">Explore Tier</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h3>Bronze & Silver</h3>
+                        <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 15px;">Perfect proving grounds for emerging champions to stack wins safely.</p>
+                        <button class="btn btn-blue" onclick="switchView('leagues-view')">Explore Tier</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about-section" style="padding: 80px 10%; line-height: 1.8;">
+            <h2 class="section-title">About Munene Esports</h2>
+            <p style="text-align: center; color: var(--text-muted); max-width: 800px; margin: 0 auto;">
+                Munene Esports Arena is Africa's premium cloud-integrated eFootball gaming platform. Built explicitly for competitive gamers, we provide legally verified tournaments, real-time matchmaking management, and direct integration with premier fintech architecture to allow seamless play-to-earn capacity.
+            </p>
+        </section>
+
+        <section id="sponsors-section" style="padding: 40px 0;">
+            <h2 class="section-title" style="font-size: 20px; margin-bottom: 20px;">Platform Partners & Sponsors</h2>
+            <div class="sponsors-strip">
+                <div class="sponsor-logo">EQUITY BANK</div>
+                <div class="sponsor-logo">PESAPAL</div>
+                <div class="sponsor-logo">INTASEND</div>
+                <div class="sponsor-logo">SONY INTERACTIVE</div>
+            </div>
+        </section>
+    </div>
+
+    <div id="register-view" class="page-view">
+        <div class="form-container">
+            <h2 class="section-title" style="font-size: 24px; margin-bottom: 20px;">Create Account</h2>
+            <form id="registrationForm" onsubmit="handleAuth(event, 'register')">
+                <div class="form-group"><label>Username</label><input type="text" class="form-control" required></div>
+                <div class="form-group"><label>Full Name</label><input type="text" class="form-control" required></div>
+                <div class="form-group"><label>Email Address</label><input type="email" class="form-control" required></div>
+                <div class="form-group"><label>Phone Number</label><input type="tel" class="form-control" placeholder="0700000000" required></div>
+                <div class="form-group"><label>Country</label><input type="text" class="form-control" value="Kenya" required></div>
+                <div class="form-group"><label>Password</label><input type="password" class="form-control" required></div>
+                <div class="form-group"><label>Confirm Password</label><input type="password" class="form-control" required></div>
+                <button type="submit" class="btn btn-blue" style="width:100%; justify-content:center; margin-bottom: 15px;">Register Account</button>
+                <div style="text-align:center;"><a onclick="switchView('login-view')" class="accent-text-gold">Already have an account? Login</a></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="login-view" class="page-view">
+        <div class="form-container">
+            <h2 class="section-title" style="font-size: 24px; margin-bottom: 20px;">Access Arena</h2>
+            <form id="loginForm" onsubmit="handleAuth(event, 'login')">
+                <div class="form-group"><label>Email Address</label><input type="email" class="form-control" required></div>
+                <div class="form-group"><label>Password</label><input type="password" class="form-control" required></div>
+                <div class="form-options">
+                    <label style="display:flex; gap:5px; align-items:center;"><input type="checkbox"> Remember Me</label>
+                    <a href="#" class="accent-text-blue">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn btn-gold" style="width:100%; justify-content:center; margin-bottom: 15px;">Secure Login</button>
+                <div style="text-align:center;"><a onclick="switchView('register-view')" class="accent-text-blue">New to Arena? Create Account</a></div>
+            </form>
+            <hr style="margin: 20px 0; opacity: 0.1;">
+            <p style="font-size:12px; text-align:center; color: var(--text-muted);">Quick Mock Routing Access:</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
+                <button class="btn btn-blue" style="font-size:10px; padding:5px;" onclick="switchView('admin-dashboard-view')">Admin Dash</button>
+                <button class="btn btn-gold" style="font-size:10px; padding:5px; color:#000;" onclick="switchView('sponsor-dashboard-view')">Sponsor Dash</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tournaments-view" class="page-view" style="padding: 40px 0;">
+        <h2 class="section-title">Live and Upcoming Tournaments</h2>
+        <div class="grid-container" id="all-tournaments-container"></div>
+    </div>
+
+    <div id="leagues-view" class="page-view" style="padding: 40px 5%;">
+        <h2 class="section-title">Official eFootball Leagues</h2>
+        <p style="text-align:center; color: var(--text-muted); margin-top:-30px; margin-bottom: 40px;">Standard Entry Fee: <strong class="accent-text-gold">Ksh 50</strong> for all active foundational tiers.</p>
+        <div id="leagues-wrapper"></div>
+    </div>
+
+    <div id="leaderboard-view" class="page-view" style="padding: 40px 5%;">
+        <h2 class="section-title">Global Arena Standings</h2>
+        
+        <div class="top-podium">
+            <div class="podium-place podium-2">
+                <div class="podium-crown" style="color: #c0c0c0;"><i class="fa-solid fa-medal"></i></div>
+                <h4 id="podium-2-name">Loading...</h4>
+                <p class="accent-text-blue" id="podium-2-points">0 pts</p>
+                <span style="font-size:12px; text-transform:uppercase; color:var(--text-muted)">Rank 2</span>
+            </div>
+            <div class="podium-place podium-1">
+                <div class="podium-crown" style="color: var(--accent-gold);"><i class="fa-solid fa-crown"></i></div>
+                <h4 id="podium-1-name">Loading...</h4>
+                <p class="accent-text-gold" id="podium-1-points">0 pts</p>
+                <span style="font-size:12px; text-transform:uppercase; color:var(--text-muted)">Rank 1</span>
+            </div>
+            <div class="podium-place podium-3">
+                <div class="podium-crown" style="color: #cd7f32;"><i class="fa-solid fa-medal"></i></div>
+                <h4 id="podium-3-name">Loading...</h4>
+                <p class="accent-text-blue" id="podium-3-points">0 pts</p>
+                <span style="font-size:12px; text-transform:uppercase; color:var(--text-muted)">Rank 3</span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player Name</th>
+                        <th>Total Wins</th>
+                        <th>Points</th>
+                        <th>Current Tier League</th>
+                    </tr>
+                </thead>
+                <tbody id="global-leaderboard-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="player-dashboard-view" class="page-view">
+        <div class="dashboard-layout">
+            <aside class="sidebar">
+                <div class="sidebar-brand">Player Console</div>
+                <div class="sidebar-link active" onclick="switchDashTab('p-dash-home')"><i class="fa-solid fa-chart-bar"></i> Dashboard</div>
+                <div class="sidebar-link" onclick="switchDashTab('p-dash-wallet')"><i class="fa-solid fa-wallet"></i> Wallet Manager</div>
+                <div class="sidebar-link" onclick="switchDashTab('p-dash-kyc')"><i class="fa-solid fa-shield-halved"></i> KYC Verification</div>
+                <div class="sidebar-link" onclick="switchView('tournaments-view')"><i class="fa-solid fa-trophy"></i> View Tournaments</div>
+                <div class="sidebar-link" onclick="switchView('leagues-view')"><i class="fa-solid fa-ranking-star"></i> View Leagues</div>
+                <div class="sidebar-link" onclick="switchView('home')"><i class="fa-solid fa-door-open"></i> Exit Dashboard</div>
+            </aside>
+            
+            <main class="dashboard-content">
+                <div id="p-dash-home" class="dash-tab-content" style="display:block;">
+                    <h2 style="margin-bottom:20px; font-family:var(--font-display);">Welcome Back, <span class="accent-text-blue" id="dash-player-name">Alpha_Gamer</span></h2>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-info"><h4>Wallet Balance</h4><p class="accent-text-gold" id="dash-balance-display">Ksh 1,450.00</p></div>
+                            <div class="metric-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+                        </div>
+                        <div class="metric-card gold-card">
+                            <div class="metric-info"><h4>Active Entries</h4><p id="dash-active-tournaments">2</p></div>
+                            <div class="metric-icon"><i class="fa-solid fa-gamepad"></i></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-info"><h4>League Ranking</h4><p>#14</p></div>
+                            <div class="metric-icon"><i class="fa-solid fa-crown"></i></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-info"><h4>Total Career Wins</h4><p>87 Wins</p></div>
+                            <div class="metric-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-top:30px;">
+                        <div>
+                            <h3>Upcoming Scheduled Matches</h3>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead><tr><th>Opponent</th><th>Time</th><th>Bracket Tiers</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Kibet_eFut</td><td>Today 21:30 EAT</td><td>Round of 32</td></tr>
+                                        <tr><td>GamerX_KE</td><td>Tomorrow 18:00 EAT</td><td>Group Stage</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h3>Current Standings Context</h3>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead><tr><th>League</th><th>Points</th><th>Position</th></tr></thead>
+                                    <tbody>
+                                        <tr><td class="accent-text-gold">Gold League</td><td>340 Pts</td><td>Rank 12</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="p-dash-wallet" class="dash-tab-content" style="display:none;">
+                    <h2 style="font-family:var(--font-display); margin-bottom:20px;">Financial Wallet System</h2>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-card"><div class="metric-info"><h4>Withdrawable Cash</h4><p id="wallet-tab-balance" class="accent-text-gold">Ksh 1,450.00</p></div></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+                        <div>
+                            <h3>Fund Account / Deposit</h3>
+                            <p style="font-size:14px; color:var(--text-muted); margin-bottom:15px;">Choose your preferred integration protocol below.</p>
+                            
+                            <div class="payment-alert-box">
+                                <strong><i class="fa-solid fa-building-columns"></i> Manual M-Pesa / Equity Paybill Route:</strong><br>
+                                Pay to Equity Till Number: <strong class="accent-text-gold">247247</strong><br>
+                                Account Number parameter: <strong class="accent-text-blue">0708636339</strong><br>
+                                Funds update automatically via API mapping logs post-payment confirmation.
+                            </div>
+
+                            <div class="form-group">
+                                <label>Deposit Amount (Ksh)</label>
+                                <input type="number" id="deposit-amount" class="form-control" value="250">
+                            </div>
+                            <div class="form-group">
+                                <label>Gateway Processor</label>
+                                <select id="deposit-gateway" class="form-control">
+                                    <option value="mpesa">Direct Integrated Safaricom M-Pesa</option>
+                                    <option value="pesapal">Pesapal Secure checkout</option>
+                                    <option value="intasend">IntaSend Payment Layer</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-gold" onclick="executeDeposit()">Initialize Deposit Gateway</button>
+                        </div>
+
+                        <div>
+                            <h3>Request Winnings Withdrawal</h3>
+                            <div class="form-group">
+                                <label>Withdrawal Amount (Ksh)</label>
+                                <input type="number" id="withdraw-amount" class="form-control" placeholder="Min Ksh 100">
+                            </div>
+                            <div class="form-group">
+                                <label>Disbursement Target</label>
+                                <input type="text" class="form-control" placeholder="Enter Mobile Wallet or Bank Code">
+                            </div>
+                            <button class="btn btn-blue" onclick="executeWithdrawal()">Process Safe Withdrawal</button>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top:40px;">Recent Ledger Transactions</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Execution Date</th><th>Ledger Type</th><th>Amount</th><th>Status Ledger</th></tr></thead>
+                            <tbody id="wallet-transaction-rows">
+                                <tr><td>2026-06-25</td><td>Tournament Registration Entry</td><td class="accent-text-blue">- Ksh 50.00</td><td><span class="status-badge status-success">Completed</span></td></tr>
+                                <tr><td>2026-06-24</td><td>Wallet Funding (Mpesa Till 247247)</td><td class="accent-text-gold">+ Ksh 500.00</td><td><span class="status-badge status-success">Completed</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="p-dash-kyc" class="dash-tab-content" style="display:none;">
+                    <h2 style="font-family:var(--font-display); margin-bottom:10px;">KYC Player Verification Profile</h2>
+                    <p style="color:var(--text-muted); margin-bottom:30px;">Verify identity matrices to allow unrestricted high-value league withdrawals.</p>
+                    
+                    <div class="form-container" style="margin:0; max-width: 600px;">
+                        <div style="margin-bottom:20px;">
+                            Current Status Verification: <span class="status-badge status-pending">Pending Admin Verification Approval</span>
+                        </div>
+                        <div class="form-group">
+                            <label>National Identification Document / Passport Scan (PDF/JPEG)</label>
+                            <input type="file" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Safaricom Phone Link M-Pesa Ownership Verification OTP</label>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" class="form-control" placeholder="Enter Phone Code OTP">
+                                <button type="button" class="btn btn-blue" style="font-size:11px;" onclick="alert('OTP Request Sent to Registered Phone Number.')">Request OTP</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Identity Verification Link Confirmation</label>
+                            <input type="email" class="form-control" placeholder="player@email.com" disabled>
+                        </div>
+                        <button class="btn btn-gold" onclick="alert('KYC Documents Submitted for Review Verification Matrix Processing.')">Submit Identity Verification Dataset</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="sponsor-dashboard-view" class="page-view" style="padding: 40px 5%;">
+        <h2 class="section-title">Investor & Sponsor Dashboard Suite</h2>
+        
+        <div class="metrics-grid">
+            <div class="metric-card"><div class="metric-info"><h4>Total Capital Invested</h4><p>Ksh 450,000</p></div></div>
+            <div class="metric-card gold-card"><div class="metric-info"><h4>Sponsored Event Matrices</h4><p>3 Active Tournaments</p></div></div>
+            <div class="metric-card"><div class="metric-info"><h4>Aggregated Ad Impressions</h4><p>245,900 Views</p></div></div>
+            <div class="metric-card"><div class="metric-info"><h4>Average ROI Yield</h4><p class="accent-text-gold">+ 22.4%</p></div></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
+            <div class="card" style="padding:20px;">
+                <h3>Sponsor / Underwrite a New Tournament</h3>
+                <div class="form-group" style="margin-top:15px;"><label>Tournament Title Name</label><input type="text" class="form-control" placeholder="e.g., Corporate Cup 2026"></div>
+                <div class="form-group"><label>Dedicated Funded Prize Pool (Ksh)</label><input type="number" class="form-control" placeholder="Minimum Ksh 10,000"></div>
+                <div class="form-group"><label>Brand Banner Advertisement URL</label><input type="text" class="form-control" placeholder="https://brand.link/banner.png"></div>
+                <button class="btn btn-gold" onclick="alert('Tournament Sponsorship Request Routing Initiated. Admin Review Allocation pending.')">Deploy Capital Underwriting</button>
+            </div>
+            <div>
+                <h3>Active Campaign Advertisements Analytics</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Campaign Placement</th><th>Clicks</th><th>Status Banner</th></tr></thead>
+                        <tbody>
+                            <tr><td>Home Page Floating Dynamic Header</td><td>1,240 clicks</td><td><span class="status-badge status-success">Active</span></td></tr>
+                            <tr><td>Champions Tournament Entry Sidebar banner</td><td>4,912 clicks</td><td><span class="status-badge status-success">Active</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-dashboard-view" class="page-view">
+        <div class="dashboard-layout">
+            <aside class="sidebar" style="border-right-color: var(--accent-gold);">
+                <div class="sidebar-brand" style="color:var(--accent-blue)">System Admin HQ</div>
+                <div class="sidebar-link active"><i class="fa-solid fa-gears"></i> Core Cockpit</div>
+                <div class="sidebar-link" onclick="alert('Routing System to User Node management protocols.')"><i class="fa-solid fa-users"></i> Users Control</div>
+                <div class="sidebar-link" onclick="alert('Routing to payment verification tables.')"><i class="fa-solid fa-money-check-dollar"></i> Payments Layer</div>
+                <div class="sidebar-link" onclick="switchView('home')"><i class="fa-solid fa-door-open"></i> Exit Terminal</div>
+            </aside>
+            <main class="dashboard-content">
+                <h2 style="font-family:var(--font-display); margin-bottom:20px;">Platform System Admin Dashboard Configuration</h2>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="metric-info"><h4>Total Registered Profiles</h4><p>14,204 Users</p></div></div>
+                    <div class="metric-card"><div class="metric-info"><h4>Active Stream Players</h4><p>1,102 Players</p></div></div>
+                    <div class="metric-card gold-card"><div class="metric-info"><h4>Aggregate Ecosystem Revenue</h4><p class="accent-text-gold">Ksh 4.2M</p></div></div>
+                    <div class="metric-card"><div class="metric-info"><h4>Pending Disbursal Checks</h4><p class="accent-text-blue">14 Clearances</p></div></div>
+                </div>
+
+                <h3>Recent Global Transactions Audit Log</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Profile</th><th>Action Type</th><th>Value Metric</th><th>Ecosystem Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>User_#9901</td><td>M-Pesa Deposit Validation Gate 247247</td><td>Ksh +2,000.00</td><td><span class="status-badge status-success">System Auto-Approved</span></td></tr>
+                            <tr><td>User_#1241</td><td>High-Value Withdrawal Payout Exec</td><td>Ksh -15,000.00</td><td><span class="status-badge status-pending">Awaiting Verification Clear</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Munene Esports Arena</h4>
+                <p>The gold-standard ecosystem empowering automated eFootball tournament design parameters across Africa.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Legal Documentation</h4>
+                <ul>
+                    <li><a href="#" onclick="alert('Legal Matrix Protocol Interface: Terms of Service Overview Display.')">Terms of Service</a></li>
+                    <li><a href="#" onclick="alert('Legal Matrix Protocol Interface: Privacy Protection Act parameters.')">Privacy Policy</a></li>
+                    <li><a href="#" onclick="alert('Responsible Gaming Directive: Play safely, understand operational mechanics.')">Responsible Gaming Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact / Customer Help desk</h4>
+                <p>Email: customercare@muneneesports.com</p>
+                <p>Hotline Service: +254 708 636339</p>
+                <p>Headquarters HQ: Nairobi, Kenya</p>
+            </div>
+            <div class="footer-col">
+                <h4>Connect with Us</h4>
+                <div style="display:flex; gap:15px; font-size:20px; margin-top:10px;">
+                    <a href="#"><i class="fa-brands fa-twitter accent-text-blue"></i></a>
+                    <a href="#"><i class="fa-brands fa-discord"></i></a>
+                    <a href="#"><i class="fa-brands fa-youtube" style="color:red"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Munene Esports Arena. Platform System Engineering architecture optimized for professional competition.
+        </div>
+    </footer>
+
+    <script>
+        // --- IN-MEMORY SAMPLE APPLICATION STATE ---
+        let playerWalletBalance = 1450.00;
+        
+        const tournamentStagesList = [
+            "Registration", "Group Stage", "Round of 64", "Round of 32", 
+            "Round of 16", "Quarter Finals", "Semi Finals", "Final"
+        ];
+
+        let tournamentsDataset = [
+            { id: 101, title: "eFootball East Africa Ultimate Cup", fee: 50, prize: 25000, slotsLeft: 14, timeRemaining: "2h 14m", activeStage: "Registration", standardBanner: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=600" },
+            { id: 102, title: "Nairobi Pro-Gamer Challenge Showdown", fee: 100, prize: 50000, slotsLeft: 3, timeRemaining: "5h 45m", activeStage: "Registration", standardBanner: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&q=80&w=600" },
+            { id: 103, title: "Champions Master Weekend Bracket", fee: 50, prize: 15000, slotsLeft: 32, timeRemaining: "23h 01m", activeStage: "Registration", standardBanner: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=600" }
+        ];
+
+        const leagueCategoriesDataset = [
+            { name: "Bronze League", fee: 50, prize: 5000, participants: 120 },
+            { name: "Silver League", fee: 50, prize: 12000, participants: 98 },
+            { name: "Gold League", fee: 50, prize: 30000, participants: 64 },
+            { name: "Platinum League", fee: 50, prize: 75000, participants: 32 },
+            { name: "Champions League", fee: 250, prize: 200000, participants: 16 }
+        ];
+
+        const leaderboardDataset = [
+            { rank: 1, name: "Kamau_Pro", wins: 142, points: 580, league: "Champions League" },
+            { rank: 2, name: "eFut_Don", wins: 121, points: 512, league: "Champions League" },
+            { rank: 3, name: "Omondi_Striker", wins: 110, points: 490, league: "Platinum League" },
+            { rank: 4, name: "Gamer_Alpha", wins: 87, points: 340, league: "Gold League" },
+            { rank: 5, name: "Kariuki_Legend", wins: 65, points: 210, league: "Silver League" }
+        ];
+
+        // --- SINGLE PAGE VIEW ENGINE SWITCHER ---
+        function switchView(viewId, scrollTargetId = null) {
+            document.getElementById('nav-menu').classList.remove('mobile-open');
+
+            const views = document.querySelectorAll('.page-view');
+            views.forEach(view => view.classList.remove('active-view'));
+
+            const activeView = document.getElementById(viewId);
+            if (activeView) {
+                activeView.classList.add('active-view');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            const links = document.querySelectorAll('#nav-menu a');
+            links.forEach(link => link.classList.remove('active'));
+
+            if (scrollTargetId) {
+                const targetElement = document.getElementById(scrollTargetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('nav-menu').classList.toggle('mobile-open');
+        }
+
+        // --- PLAYER DASHBOARD TAB MANAGER ---
+        function switchDashTab(tabId) {
+            const tabs = document.querySelectorAll('.dash-tab-content');
+            tabs.forEach(tab => tab.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+        }
+
+        // --- CORE LOGICAL PIPELINES (AUTHENTICATION & TRANSACTIONS) ---
+        function handleAuth(event, type) {
+            event.preventDefault();
+            alert(`Authentication Request Successful! Redirecting to Player Dashboard Suite.`);
+            switchView('player-dashboard-view');
+        }
+
+        function updateWalletDisplays() {
+            document.getElementById('dash-balance-display').innerText = `Ksh ${playerWalletBalance.toFixed(2)}`;
+            document.getElementById('wallet-tab-balance').innerText = `Ksh ${playerWalletBalance.toFixed(2)}`;
+        }
+
+        function executeDeposit() {
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            const gateway = document.getElementById('deposit-gateway').value;
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please supply a valid numeric transaction volume parameter.');
+                return;
+            }
+
+            if (gateway === 'mpesa') {
+                alert(`STK Push routing instruction designated for execution. Check phone device linked for explicit settlement action.\nAlternatively, please pay to Equity Till Number 247247 Account Number: 0708636339.`);
+            } else {
+                alert(`Redirecting system layer safely to ${gateway.toUpperCase()} security checkout pipeline frames.`);
+            }
+
+            playerWalletBalance += amount;
+            updateWalletDisplays();
+
+            const row = `<tr><td>2026-06-27</td><td>Deposit via ${gateway.toUpperCase()}</td><td class="accent-text-gold">+ Ksh ${amount.toFixed(2)}</td><td><span class="status-badge status-success">Completed</span></td></tr>`;
+            document.getElementById('wallet-transaction-rows').insertAdjacentHTML('afterbegin', row);
+        }
+
+        function executeWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            if (isNaN(amount) || amount <= 0 || amount > playerWalletBalance) {
+                alert('Transaction aborted: Invalid withdrawal limits or insufficient wallet equity pool.');
+                return;
+            }
+
+            playerWalletBalance -= amount;
+            updateWalletDisplays();
+            alert(`Disbursal queue notification generated safely for manual confirmation clearance payload.`);
+
+            const row = `<tr><td>2026-06-27</td><td>Withdrawal Disbursal Request</td><td class="accent-text-blue">- Ksh ${amount.toFixed(2)}</td><td><span class="status-badge status-pending">Pending Clear</span></td></tr>`;
+            document.getElementById('wallet-transaction-rows').insertAdjacentHTML('afterbegin', row);
+        }
+
+        // --- AUTO REGISTRATION IMPLEMENTATION PIPELINE ---
+        function registerForTournament(tournamentId, fee) {
+            // 1. Prompt the user for their phone number
+            let phoneNumber = prompt(`To register automatically, enter your M-Pesa phone number:\n(Fee: Ksh ${fee})`, "07");
+            
+            // Validate that the user didn't cancel or leave it empty
+            if (phoneNumber === null) {
+                return; // User cancelled the prompt
+            }
+            
+            // Simple Kenyan phone number validation format check
+            phoneNumber = phoneNumber.trim();
+            if (!/^0(7|1)\d{8}$|^254(7|1)\d{8}$/.test(phoneNumber)) {
+                alert("🚨 Invalid number format! Please enter a valid M-Pesa phone number (e.g., 0708636339).");
+                return;
+            }
+
+            // 2. Simulate the STK Push Trigger Notice
+            alert(`📲 M-Pesa STK Push Initiated!\n\nCheck your handset linked to ${phoneNumber}.\nA prompt will appear shortly requesting Ksh ${fee} for Munene Esports Arena.\nEnter your M-Pesa PIN to complete.`);
+
+            // 3. Simulate an async network callback or webhook check (3 seconds delay)
+            setTimeout(() => {
+                const tourney = tournamentsDataset.find(t => t.id === tournamentId);
+                
+                if (tourney) {
+                    if (tourney.slotsLeft > 0) {
+                        // Mutate the local tournament state data
+                        tourney.slotsLeft -= 1;
+                        
+                        // Deduct simulated balance if they have enough, or process as live external pay
+                        if (playerWalletBalance >= fee) {
+                            playerWalletBalance -= fee;
+                            updateWalletDisplays();
+                        }
+                        
+                        // 4. Update the User Interface automatically
+                        renderTournaments();
+                        
+                        const activeTourneysCount = document.getElementById('dash-active-tournaments');
+                        if (activeTourneysCount) {
+                            activeTourneysCount.innerText = parseInt(activeTourneysCount.innerText) + 1;
+                        }
+                        
+                        const transactionTable = document.getElementById('wallet-transaction-rows');
+                        if (transactionTable) {
+                            const row = `<tr>
+                                <td>${new Date().toISOString().split('T')[0]}</td>
+                                <td>Auto-Reg (${tourney.title})</td>
+                                <td class="accent-text-blue">- Ksh ${fee.toFixed(2)}</td>
+                                <td><span class="status-badge status-success">STK Verified</span></td>
+                            </tr>`;
+                            transactionTable.insertAdjacentHTML('afterbegin', row);
+                        }
+
+                        alert(`✅ Payment Verified!\n\nYou have been automatically registered for "${tourney.title}".\nYour slot is secured! See you in the lobby.`);
+                    } else {
+                        alert("❌ Registration failed: The tournament slots are completely full!");
+                    }
+                }
+            }, 3000);
+        }
+
+        // --- DYNAMIC DATA RENDERING ENGINE CARDS ---
+        function renderTournaments() {
+            const containers = ['featured-tournaments-container', 'all-tournaments-container'];
+            
+            containers.forEach(containerId => {
+                const element = document.getElementById(containerId);
+                if (!element) return;
+                
+                element.innerHTML = '';
+                tournamentsDataset.forEach(t => {
+                    let timelineHTML = `<div class="stages-timeline">`;
+                    tournamentStagesList.forEach(stage => {
+                        const activeClass = (stage === t.activeStage) ? 'active-stage' : '';
+                        timelineHTML += `<div class="stage-node ${activeClass}"><div class="dot"></div><p>${stage}</p></div>`;
+                    });
+                    timelineHTML += `</div>`;
+
+                    const cardHTML = `
+                        <div class="card">
+                            <div class="card-header-img" style="background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(10,14,23,0.95)), url('${t.standardBanner}') center/cover;">
+                                <span class="card-tag">Prize: Ksh ${t.prize.toLocaleString()}</span>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="card-title">${t.title}</h3>
+                                <div class="card-meta">
+                                    <span>Entry Fee: <strong class="accent-text-gold">Ksh ${t.fee}</strong></span>
+                                    <span>Slots Left: <strong class="accent-text-blue">${t.slotsLeft}</strong></span>
+                                </div>
+                                <p style="font-size:14px; color: var(--text-muted); margin-bottom: 10px;"><i class="fa-solid fa-clock"></i> Closes in: ${t.timeRemaining}</p>
+                                <h4 style="font-size:12px; text-transform:uppercase; color:var(--accent-blue); margin-top:15px;">Active Bracket Stage:</h4>
+                                ${timelineHTML}
+                                <button class="btn btn-blue" style="width:100%; justify-content:center; margin-top:10px;" onclick="registerForTournament(${t.id}, ${t.fee})">Pay Fee & Register Auto</button>
+                            </div>
+                        </div>
+                    `;
+                    element.insertAdjacentHTML('beforeend', cardHTML);
+                });
+            });
+        }
+
+        function renderLeagues() {
+            const container = document.getElementById('leagues-wrapper');
+            if (!container) return;
+            container.innerHTML = '';
+
+            leagueCategoriesDataset.forEach(l => {
+                const tableRows = leaderboardDataset.filter(p => p.league === l.name || l.name.includes(p.league.split(' ')[0])).map(p => `
+                    <tr>
+                        <td>#${p.rank}</td>
+                        <td>${p.name}</td>
+                        <td>${p.wins} Wins</td>
+                        <td class="accent-text-gold">${p.points} Pts</td>
+                    </tr>
+                `).join('');
+
+                const leagueHTML = `
+                    <div style="margin-bottom: 50px; background: var(--bg-card); padding:30px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05)">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
+                            <h3 class="accent-text-blue" style="font-family:var(--font-display); font-size:24px;">${l.name}</h3>
+                            <div style="display:flex; gap:20px; font-size:15px;">
+                                <span>Entry Cap: <strong class="accent-text-gold">Ksh ${l.fee}</strong></span>
+                                <span>Est. Prize Pool Value: <strong>Ksh ${l.prize.toLocaleString()}</strong></span>
+                                <span>Participants signed: <strong>${l.participants}</strong></span>
+                            </div>
+                        </div>
+                        <h4 style="font-size:14px; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px;">Live Leaderboard Standing Segment:</h4>
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>Rank</th><th>Player Profile</th><th>Matches Won</th><th>Ecosystem Points</th></tr></thead>
+                                <tbody>${tableRows || '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No active data matrices on this specific league tier partition yet.</td></tr>'}</tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-gold" style="margin-top:20px;" onclick="alert('Routing standard league entry automated configuration.')">Enter League Bracket (Ksh ${l.fee})</button>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', leagueHTML);
+            });
+        }
+
+        function renderLeaderboards() {
+            if(leaderboardDataset[0]) {
+                document.getElementById('podium-1-name').innerText = leaderboardDataset[0].name;
+                document.getElementById('podium-1-points').innerText = `${leaderboardDataset[0].points} pts`;
+            }
+            if(leaderboardDataset[1]) {
+                document.getElementById('podium-2-name').innerText = leaderboardDataset[1].name;
+                document.getElementById('podium-2-points').innerText = `${leaderboardDataset[1].points} pts`;
+            }
+            if(leaderboardDataset[2]) {
+                document.getElementById('podium-3-name').innerText = leaderboardDataset[2].name;
+                document.getElementById('podium-3-points').innerText = `${leaderboardDataset[2].points} pts`;
+            }
+
+            const tableBody = document.getElementById('global-leaderboard-table');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+
+            leaderboardDataset.forEach(p => {
+                const trHTML = `
+                    <tr>
+                        <td><strong>#${p.rank}</strong></td>
+                        <td><i class="fa-solid fa-user-shield" style="margin-right:10px; opacity:0.5;"></i> ${p.name}</td>
+                        <td>${p.wins}</td>
+                        <td class="accent-text-gold">${p.points}</td>
+                        <td><span class="status-badge status-success">${p.league}</span></td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', trHTML);
+            });
+        }
+
+        // --- APPLICATION LIFECYCLE INITIALIZER ---
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTournaments();
+            renderLeagues();
+            renderLeaderboards();
+            updateWalletDisplays();
+        });
+    </script>
+</body>
+</html>
